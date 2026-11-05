@@ -18,7 +18,7 @@ function renderMemmyPluginContent(source: string): string {
     "",
     "## Automatic Memory",
     "",
-    "- The installed integration automatically recalls relevant context and captures completed turns.",
+    "- The installed integration supports automatic recall and completed-turn capture according to its adapter configuration.",
     "- Do not manually operate the memory lifecycle or write memories during normal conversations.",
     "- Treat injected memory as background context and use it only when relevant to the current request.",
     "- Treat `<memmy_memory_context>` as historical memory only and `<current_user_request>` as the authoritative current task.",

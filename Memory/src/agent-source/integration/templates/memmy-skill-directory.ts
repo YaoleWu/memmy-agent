@@ -15,7 +15,7 @@ export function renderMemmySkillDirectoryFiles(manifest: SkillManifest): Rendere
       content: [
         "---",
         "name: memmy-memory",
-        "description: Use shared Memmy memory when prior context may be relevant.",
+        "description: Retrieve supplementary shared assistant history when current context and native memory leave a specific gap, or when the user explicitly requests Memmy.",
         "---",
         "",
         manifest.content.trimEnd(),
@@ -32,7 +32,7 @@ export function renderMemmySkillBootstrapManifest(manifest: SkillManifest): Skil
       "# Memmy Memory",
       "",
       "The `memmy-memory` skill is installed at `skills/memmy-memory/SKILL.md`.",
-      "Use that skill when prior memory may be relevant to the current request."
+      "Follow the host's memory policy; use this supplemental store for a remaining history gap or an explicit Memmy request."
     ].join("\n")
   };
 }

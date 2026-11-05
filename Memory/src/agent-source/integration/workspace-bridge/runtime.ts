@@ -49,6 +49,7 @@ export interface RuntimeConfig {
   token: string;
   userId: string;
   workspaceHostId: string;
+  recallLayers?: Array<"Skill" | "L1" | "L2" | "L3">;
 }
 
 export interface RuntimeSession {
@@ -82,6 +83,10 @@ export interface LoadedRuntimeSession extends RuntimeSession {
 
 export async function readRuntimeConfig(configUrl: URL, pinnedOwner = false): Promise<RuntimeConfig> {
   const snapshot = objectValue(await readJson(configUrl));
+  const recallLayers = Array.isArray(snapshot.recallLayers) &&
+    snapshot.recallLayers.every((layer) => ["Skill", "L1", "L2", "L3"].includes(layer))
+    ? snapshot.recallLayers as RuntimeConfig["recallLayers"]
+    : undefined;
   const configPath = text(snapshot.memmy_config_path) || resolve(homedir(), ".memmy", "config.yaml");
   const yaml = objectValue(YAML.parse(await readFile(configPath, "utf8").catch(() => "{}")));
   const memory = objectValue(yaml.memmyMemory);
@@ -95,6 +100,7 @@ export async function readRuntimeConfig(configUrl: URL, pinnedOwner = false): Pr
       ? text(snapshot.userId) || "local-user"
       : text(app.userId) || text(memory.userId) || text(snapshot.userId) || "local-user",
     workspaceHostId: text(snapshot.workspaceHostId),
+    ...(recallLayers !== undefined ? { recallLayers } : {}),
   };
 }
 
@@ -223,7 +229,12 @@ export async function startRuntimeTurn(
   const body = session.protocol === "v2"
     ? { ...runtimeEnvelope(session.source, session.sessionKey, session.config.userId, session.projectId, session.adapterId, session.profileId), sessionId: session.sessionId, turnId, query }
     : { source: session.source, adapterId: session.adapterId, requestId: `${session.source}-start:${turnId}`, sessionId: session.sessionId, turnId, query };
-  return objectValue(await client.post("/api/v1/turns/start", body));
+  // An adapter can keep capture/lifecycle active while making recall on-demand.
+  // Omitted preserves the service default; [] explicitly recalls no layers.
+  return objectValue(await client.post("/api/v1/turns/start", {
+    ...body,
+    ...(session.config.recallLayers !== undefined ? { layers: session.config.recallLayers } : {}),
+  }));
 }
 
 export async function completeRuntimeTurn(

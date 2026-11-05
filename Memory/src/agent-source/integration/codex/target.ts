@@ -103,9 +103,11 @@ export function createCodexSkillTarget(deps: CreateCodexSkillTargetDeps = {}): S
       const bridgePath = join(hookDirectory, WORKSPACE_BRIDGE_FILE_NAME);
       const hooksFilePath = join(root, HOOKS_FILE_NAME);
       const hookCommand = createNodeHookCommand(hookScriptPath);
+      const previousHookConfig = await readJsonConfig(hookConfigPath);
       const hookConfig = {
         memmy_config_path: memmyConfigPath,
-        ...(await readMemmyMemoryServiceConfig(memmyConfigPath))
+        ...(await readMemmyMemoryServiceConfig(memmyConfigPath)),
+        ...(Array.isArray(previousHookConfig.recallLayers) ? { recallLayers: previousHookConfig.recallLayers } : {}),
       };
       await withCodexHookFileRollback(
         [hookConfigPath, hookScriptPath, bridgePath, hooksFilePath],
