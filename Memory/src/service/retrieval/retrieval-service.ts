@@ -72,6 +72,8 @@ import {
 import { IndexedCandidatePool } from "./indexed-candidate-pool.js";
 import { deduplicateCrossAccountMemoryCandidates } from "./cross-account-candidate-dedup.js";
 import { filterL1TraceSpanRecallHits } from "./l1-trace-span-filter.js";
+import { userMemoryContextIssue } from "../user-memory/user-memory-context.js";
+import { redactSecrets } from "@memmy/agent-source-core";
 
 type InternalMemorySearchRequest = MemorySearchRequest & {
   episodeId?: string;
@@ -642,6 +644,7 @@ export function buildInjectedContext(
   };
   const memoryById = new Map(contextMemories.map((memory) => [memory.id, memory]));
   const rendered = hits.flatMap((hit) => splitUserMemoryMembersForInjection(hit).flatMap((memberHit) => {
+    if (retrievalMode === "turn_start" && memberHit.memoryLayer === "UserMemory" && userMemoryContextIssue(memberHit.snippet)) return [];
     const section = renderInjectedSection(memberHit, memoryById.get(memberHit.id), options);
     return section ? [section] : [];
   }));
@@ -682,7 +685,7 @@ export function buildInjectedContext(
     used += avoidance.tokenEstimate ?? 0;
   }
 
-  const markdown = renderInjectedMarkdown(renderedSections, guidance, avoidance, retrievalMode, options);
+  const markdown = redactSecrets(renderInjectedMarkdown(renderedSections, guidance, avoidance, retrievalMode, options));
 
   return {
     injectedContext: {

@@ -1,5 +1,6 @@
 import type { UserMemoryRecord, UserMemoryType } from "../../types.js";
 import { stableHash } from "../../utils/id.js";
+import { userMemoryContextIssue } from "./user-memory-context.js";
 
 const QUESTION_PATTERN = /(?:[?？]|什么|哪(?:个|种|些|里)?|多少|怎么|如何|是否|是不是|吗\s*$|呢\s*$|\b(?:what|which|who|where|when|why|how|do i|did i|am i|is my|are my)\b)/i;
 const PREFERENCE_PATTERNS = [
@@ -21,7 +22,7 @@ const DYNAMIC_CURRENT_FACT_PATTERN = /(?:天气|气温|降雨|空气质量|股�
 
 export function classifyUserMemory(text: string): UserMemoryType[] {
   const content = text.trim();
-  if (!content || isUserMemoryQuestion(content) || isQuestionOnly(content) || DYNAMIC_CURRENT_FACT_PATTERN.test(content)) return [];
+  if (!content || userMemoryContextIssue(content) || isUserMemoryQuestion(content) || isQuestionOnly(content) || DYNAMIC_CURRENT_FACT_PATTERN.test(content)) return [];
   const types: UserMemoryType[] = [];
   if (
     PREFERENCE_PATTERNS.some((pattern) => pattern.test(content)) ||

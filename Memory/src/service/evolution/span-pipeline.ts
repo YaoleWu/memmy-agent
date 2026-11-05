@@ -28,6 +28,7 @@ import {
 } from "../import/import-job-processor.js";
 import { summarizeTurn as sessionSummarizeTurn } from "../session/session-turn-service.js";
 import type { EnqueueJobInput } from "../worker/job-handlers.js";
+import { userMemoryContextIssue } from "../user-memory/user-memory-context.js";
 import {
   normalizeCaptureSummaryUserText,
   sanitizeCaptureSummary
@@ -797,7 +798,9 @@ private reflectionDownstreamPreview(job: EvolutionJobRecord, memory: MemoryRow):
       throw new Error("turn memory decision requires user to be null or an object");
     }
     const l1 = isRecord(result.l1) ? result.l1 : undefined;
-    const user = isRecord(result.user) ? result.user : undefined;
+    const user = isRecord(result.user) && !userMemoryContextIssue(input.userText)
+      ? result.user
+      : undefined;
     if (mustKeep && !l1) {
       throw new Error("turn memory decision requires l1 title and summary when capture is forced");
     }
@@ -829,14 +832,13 @@ private reflectionDownstreamPreview(job: EvolutionJobRecord, memory: MemoryRow):
     ) {
       throw new Error(`turn memory decision requires a valid user.target for ${String(compactUserAction)}`);
     }
-    const correctedUserMemoryContent = typeof user?.replacement === "string"
+    // Some JSON-compatible models populate unused fields. Only a validated
+    // correction may supply replacement text; create/confirm keep the USER source.
+    const correctedUserMemoryContent = userMemoryAction === "correct_existing" && typeof user?.replacement === "string"
       ? user.replacement.trim()
       : "";
     if (userMemoryAction === "correct_existing" && !correctedUserMemoryContent) {
       throw new Error("turn memory decision requires user.replacement for correct");
-    }
-    if (userMemoryAction !== "correct_existing" && correctedUserMemoryContent) {
-      throw new Error("turn memory decision allows user.replacement only for correct");
     }
     if (userMemoryAction === "create" && matchedUserMemoryId) {
       throw new Error("turn memory decision requires an empty user.target for create");
@@ -847,7 +849,7 @@ private reflectionDownstreamPreview(job: EvolutionJobRecord, memory: MemoryRow):
       createL1: Boolean(l1),
       l1Title,
       l1Summary,
-      policyEligible: l1EvidenceSupportsPolicy(l1Evidence),
+      policyEligible: !userMemoryContextIssue(input.userText) && l1EvidenceSupportsPolicy(l1Evidence),
       createUserMemory: Boolean(user),
       userMemoryTypes: [...new Set(userMemoryEvidence.map((item) => item.type))],
       userMemoryEvidence,
