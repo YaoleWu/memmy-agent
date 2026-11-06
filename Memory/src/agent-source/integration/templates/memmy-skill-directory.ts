@@ -42,7 +42,7 @@ export function renderMemmyResumeSkillFile(source: string): string {
     "---",
     "name: memmy-resume",
     "description: Search Memmy L1 episodes and continue a selected prior task. Use when the user explicitly invokes /memmy-resume.",
-    "disable-model-invocation: true",
+    ...(source === "codex" ? [] : ["disable-model-invocation: true"]),
     "---",
     "",
     "# Memmy Resume",
@@ -59,6 +59,33 @@ export function renderMemmyResumeSkillFile(source: string): string {
     `2. For a selection from \`1\` to \`5\`, use the matching episode id from the latest candidate list, run \`memmy-memory get "<episode_id>" --source ${source}\`, and continue the selected task from that context.`,
     "3. For `cancel`, discard the latest candidate list.",
     "4. Never invent an episode or ask the user to paste an episode that Memmy can retrieve.",
+    ...(source === "codex" ? [
+      "",
+      "## Continue from verified state",
+      "",
+      "Treat the selected episode as dated history. Recover its project, environment, goal, verified results, constraints, and next action; apply current user corrections and live project evidence before acting. Reconcile pending job/request receipts before retrying work. Continue within existing authorization; selecting an episode does not authorize additional external changes.",
+      "",
+      "In Codex, use relevant native context already available for consistency. This explicit Memmy workflow does not require unrelated native searches."
+    ] : []),
     ""
   ].join("\n");
+}
+
+export function renderMemmyResumeSkillDirectoryFiles(source: string): RenderedSkillDirectoryFile[] {
+  const files = [{ relativePath: "SKILL.md", content: renderMemmyResumeSkillFile(source) }];
+  if (source === "codex") {
+    files.push({
+      relativePath: "agents/openai.yaml",
+      content: [
+        "interface:",
+        "  display_name: \"Memmy Resume\"",
+        "  short_description: \"Resume a selected task from shared history\"",
+        "  default_prompt: \"Use $memmy-resume to find a prior task, let me select it, and continue after checking its current state.\"",
+        "policy:",
+        "  allow_implicit_invocation: false",
+        ""
+      ].join("\n")
+    });
+  }
+  return files;
 }

@@ -3,7 +3,7 @@ import { basename, dirname, join } from "node:path";
 import {
   MEMMY_RESUME_SKILL_DIRECTORY_NAME,
   MEMMY_SKILL_DIRECTORY_NAME,
-  renderMemmyResumeSkillFile,
+  renderMemmyResumeSkillDirectoryFiles,
   renderMemmySkillDirectoryFiles
 } from "./templates/memmy-skill-directory.js";
 import type { SkillManifest } from "./types.js";
@@ -15,7 +15,7 @@ export async function replaceMemmySkillDirectory(rootDirectory: string, manifest
 
 export async function replaceMemmyResumeSkillDirectory(rootDirectory: string, source: string): Promise<void> {
   const targetPath = join(rootDirectory, "skills", MEMMY_RESUME_SKILL_DIRECTORY_NAME);
-  await replaceDirectory(targetPath, [{ relativePath: "SKILL.md", content: renderMemmyResumeSkillFile(source) }]);
+  await replaceDirectory(targetPath, renderMemmyResumeSkillDirectoryFiles(source));
 }
 
 async function replaceDirectory(

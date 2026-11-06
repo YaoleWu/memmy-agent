@@ -1222,6 +1222,12 @@ function buildResumeContext(selection, detail) {
     "The user selected candidate " + selection.index + " from the previous /memmy-resume result.",
     "Treat the current user prompt as a selection, not as a standalone question or task.",
     "Continue the selected task using the episode context below. Do not ask the user to paste it again.",
+    ...(SOURCE === "codex" ? [
+      "Recover the selected project's goal, verified results, constraints, and next action; keep other projects separate.",
+      "Treat this episode as dated history. Current user corrections and live project/runtime evidence take precedence.",
+      "Reconcile pending job/request receipts before retrying work. Continue within existing authorization; selecting an episode does not authorize additional external changes.",
+      "Use relevant native context already available for consistency; do not add unrelated native searches to this explicit Memmy workflow."
+    ] : []),
     "",
     "Episode id: " + episodeId,
     "Episode title: " + title,
